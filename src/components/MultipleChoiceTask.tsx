@@ -37,7 +37,7 @@ export default function MultipleChoiceTask({ task, onCorrect }: Props) {
         <img
           src={task.questionImage}
           alt="Oppgavebilde"
-          className="rounded-2xl w-full object-contain max-h-64"
+          className="rounded-2xl w-full h-auto max-h-96"
         />
       )}
       <p className="text-lg font-semibold text-gray-800">{task.question}</p>
