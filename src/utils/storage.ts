@@ -3,17 +3,35 @@ import type { AdminConfig, GameState } from '../types';
 const CONFIG_KEY = 'easter-hunt-config';
 const GAME_KEY = 'easter-hunt-game';
 
+function isValidConfig(obj: unknown): obj is AdminConfig {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'passwordHash' in obj &&
+    typeof (obj as AdminConfig).passwordHash === 'string' &&
+    (obj as AdminConfig).passwordHash.length > 0 &&
+    Array.isArray((obj as AdminConfig).tasks)
+  );
+}
+
 export async function loadConfig(): Promise<AdminConfig | null> {
   const stored = localStorage.getItem(CONFIG_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch { /* fall through */ }
+    try {
+      const parsed = JSON.parse(stored);
+      if (isValidConfig(parsed)) return parsed;
+    } catch { /* fall through */ }
   }
   try {
     const res = await fetch(import.meta.env.BASE_URL + 'tasks.json');
     if (res.ok) {
-      const config: AdminConfig = await res.json();
-      saveConfig(config);
-      return config;
+      const text = await res.text();
+      if (!text.trim()) return null;
+      const parsed = JSON.parse(text);
+      if (isValidConfig(parsed)) {
+        saveConfig(parsed);
+        return parsed;
+      }
     }
   } catch { /* no default config */ }
   return null;

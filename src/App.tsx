@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import PlayerPage from './pages/PlayerPage';
 import AdminPage from './pages/AdminPage';
@@ -8,12 +8,22 @@ import { loadConfig } from './utils/storage';
 
 export default function App() {
   const setConfig = useAdminStore(s => s.setConfig);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadConfig().then(config => {
       if (config) setConfig(config);
+      setLoading(false);
     });
   }, [setConfig]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-yellow-50 flex items-center justify-center">
+        <div className="text-5xl animate-bounce">🐣</div>
+      </div>
+    );
+  }
 
   return (
     <HashRouter>
