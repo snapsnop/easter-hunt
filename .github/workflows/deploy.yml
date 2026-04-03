@@ -31,7 +31,8 @@ jobs:
       - run: npm ci
 
       - name: Write tasks.json
-        run: mkdir -p public && echo '${{ secrets.TASKS_JSON }}' > public/tasks.json
+        if: ${{ vars.TASKS_JSON != '' }}
+        run: mkdir -p public && printf '%s' '${{ vars.TASKS_JSON }}' > public/tasks.json
 
       - run: npm run build
         env:
