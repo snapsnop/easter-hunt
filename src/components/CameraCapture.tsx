@@ -102,16 +102,18 @@ export default function CameraCapture({ onCapture, onClose }: Props) {
         </div>
       ) : (
         /* Live viewfinder */
-        <div className="flex-1 flex flex-col gap-4 p-4 items-center">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            onCanPlay={() => setReady(true)}
-            className="w-full rounded-2xl bg-gray-900 object-cover"
-            style={{ height: 'calc(100dvh - 200px)', maxHeight: '65vh' }}
-          />
+        <div className="flex-1 flex flex-col p-4 items-center min-h-0" style={{ gap: '16px' }}>
+          <div className="flex-1 w-full min-h-0 flex items-center justify-center">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              onCanPlay={() => setReady(true)}
+              className="rounded-2xl bg-gray-900 object-contain max-w-full max-h-full"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
           <button
             onClick={capture}
             disabled={!ready}

@@ -94,11 +94,11 @@ export default function LocationTask({ task, apiKey, onCorrect }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="text-xs text-gray-400 mb-1 text-center">Referanse</p>
-            <img src={task.referenceImage} alt="Referanse" className="rounded-xl w-full object-cover h-36" />
+            <img src={task.referenceImage} alt="Referanse" className="rounded-xl w-full object-contain h-36" />
           </div>
           <div>
             <p className="text-xs text-gray-400 mb-1 text-center">Ditt bilde</p>
-            <img src={preview!} alt="Ditt bilde" className="rounded-xl w-full object-cover h-36" />
+            <img src={preview!} alt="Ditt bilde" className="rounded-xl w-full object-contain h-36" />
           </div>
         </div>
         <div className="flex gap-2">
@@ -116,19 +116,19 @@ export default function LocationTask({ task, apiKey, onCorrect }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {task.questionImage && (
-        <img src={task.questionImage} alt="Oppgavebilde" className="rounded-2xl w-full object-cover max-h-48" />
+        <img src={task.questionImage} alt="Oppgavebilde" className="rounded-2xl w-full object-contain max-h-48" />
       )}
       {task.referenceImage && (
         <div>
           <p className="text-xs font-bold text-gray-500 mb-1">📍 Finn dette stedet:</p>
-          <img src={task.referenceImage} alt="Lokasjon" className="rounded-2xl w-full object-cover max-h-64" />
+          <img src={task.referenceImage} alt="Lokasjon" className="rounded-2xl w-full object-contain max-h-64" />
         </div>
       )}
       <p className="text-lg font-semibold text-gray-800">{task.question}</p>
 
       {preview ? (
         <div className="flex flex-col gap-3">
-          <img src={preview} alt="Ditt bilde" className="rounded-2xl w-full object-cover max-h-48" />
+          <img src={preview} alt="Ditt bilde" className="rounded-2xl w-full object-contain max-h-48" />
           {status === 'wrong' && (
             <p className="text-red-500 text-sm font-semibold text-center">
               Ikke riktig sted. {reason}

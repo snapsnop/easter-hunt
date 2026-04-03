@@ -8,25 +8,35 @@ import LocationTask from '../components/LocationTask';
 import PuzzleBoard from '../components/PuzzleBoard';
 import PieceReveal from '../components/PieceReveal';
 
+function nextUnanswered(current: number, total: number, completed: number[]): number | null {
+  for (let offset = 1; offset < total; offset++) {
+    const idx = (current + offset) % total;
+    if (!completed.includes(idx)) return idx;
+  }
+  return null;
+}
+
 export default function PlayerPage() {
   const config = useAdminStore(s => s.config);
-  const { state, init, start, advanceTask } = useGameStore();
+  const { state, init, start, completeTask, goToTask } = useGameStore();
   const navigate = useNavigate();
   const [revealPiece, setRevealPiece] = useState<string | null>(null);
 
   const tasks = (config?.tasks ?? []).slice().sort((a, b) => a.order - b.order);
   const revealOrder = config?.pieceRevealOrder;
+  const completed = state.completedTaskIndices ?? [];
+  const allDone = tasks.length > 0 && completed.length >= tasks.length;
 
   useEffect(() => {
     if (tasks.length > 0) init(tasks.length);
   }, [tasks.length, init]);
 
-  // Navigate once modal is closed and all tasks are done
+  // Navigate when all tasks are completed and no modal is open
   useEffect(() => {
-    if (!revealPiece && tasks.length > 0 && state.currentTaskIndex >= tasks.length) {
+    if (!revealPiece && allDone) {
       navigate('/complete');
     }
-  }, [state.currentTaskIndex, tasks.length, revealPiece, navigate]);
+  }, [allDone, revealPiece, navigate]);
 
   if (!config || tasks.length === 0) {
     return (
@@ -41,7 +51,7 @@ export default function PlayerPage() {
     );
   }
 
-  // Show welcome screen if not yet started
+  // Welcome screen
   if (!state.started) {
     const hasWelcome = config.welcomeTitle || config.welcomeText || config.welcomeImage;
     return (
@@ -50,7 +60,7 @@ export default function PlayerPage() {
           <img
             src={config.welcomeImage}
             alt="Velkomstbilde"
-            className="w-full rounded-3xl object-cover max-h-72 shadow-md"
+            className="w-full rounded-3xl object-contain max-h-72 shadow-md"
           />
         )}
         <div className="flex flex-col gap-3">
@@ -75,48 +85,52 @@ export default function PlayerPage() {
     );
   }
 
-  // Which slot-index is revealed for the current task
-  const currentSlot = revealOrder?.[state.currentTaskIndex] ?? state.currentTaskIndex;
-  const currentTask = tasks[state.currentTaskIndex];
+  const currentTaskIndex = state.currentTaskIndex;
+  const currentTask = tasks[currentTaskIndex];
+  const currentSlot = revealOrder?.[currentTaskIndex] ?? currentTaskIndex;
+  const skippedCount = tasks.length - completed.length;
+  const next = nextUnanswered(currentTaskIndex, tasks.length, completed);
 
   function handleCorrect() {
     const piece = config?.puzzlePieces?.[currentSlot];
-    const isLast = state.currentTaskIndex >= tasks.length - 1;
-    advanceTask();
+    completeTask(currentTaskIndex);
+    // Navigate to next unanswered after reveal closes (or immediately if no piece)
+    const nextIdx = nextUnanswered(currentTaskIndex, tasks.length, [...completed, currentTaskIndex]);
     if (piece) {
       setRevealPiece(piece);
-    } else if (isLast) {
-      navigate('/complete');
+      if (nextIdx !== null) goToTask(nextIdx);
+    } else if (nextIdx !== null) {
+      goToTask(nextIdx);
     }
+    // If nextIdx is null, allDone will trigger navigate('/complete') via effect
   }
 
   function handleRevealClose() {
     setRevealPiece(null);
-    // Explicit navigate for Safari (in case effect doesn't fire)
-    if (state.currentTaskIndex >= tasks.length) {
-      navigate('/complete');
-    }
   }
 
-  // Build sparse display array: piece sits at its correct grid slot
+  function handleSkip() {
+    if (next !== null) goToTask(next);
+  }
+
+  // Build unlocked slots from completed indices
   const unlockedSlots = new Set(
-    (revealOrder ?? tasks.map((_, i) => i)).slice(0, state.currentTaskIndex)
+    completed.map(i => revealOrder?.[i] ?? i)
   );
   const displayPieces = (config.puzzlePieces ?? []).map((p, i) =>
     unlockedSlots.has(i) ? p : ''
   );
 
-  const progress = tasks.length > 0 ? state.currentTaskIndex / tasks.length : 0;
+  const progress = tasks.length > 0 ? completed.length / tasks.length : 0;
 
   return (
-    // Always render the outer shell so PieceReveal can mount even after the last task
     <div className="min-h-screen bg-yellow-50 flex flex-col">
       {currentTask && (
         <>
           <div className="bg-amber-400 px-4 py-3 flex items-center justify-between shadow">
             <h1 className="text-xl font-black text-white">🐣 Påskerebus</h1>
             <span className="text-amber-100 text-sm font-semibold">
-              {state.currentTaskIndex + 1} / {tasks.length}
+              {completed.length} / {tasks.length} løst
             </span>
           </div>
 
@@ -127,10 +141,44 @@ export default function PlayerPage() {
             />
           </div>
 
+          {/* Task navigation row */}
+          <div className="bg-white border-b border-amber-100 px-4 py-2 flex gap-1.5 justify-center flex-wrap">
+            {tasks.map((_, i) => {
+              const isDone = completed.includes(i);
+              const isCurrent = i === currentTaskIndex;
+              return (
+                <button
+                  key={i}
+                  onClick={() => !isDone && goToTask(i)}
+                  disabled={isDone}
+                  className={`w-8 h-8 rounded-full text-xs font-black transition-colors ${
+                    isDone
+                      ? 'bg-green-400 text-white cursor-default'
+                      : isCurrent
+                      ? 'bg-amber-400 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-amber-100'
+                  }`}
+                >
+                  {isDone ? '✓' : i + 1}
+                </button>
+              );
+            })}
+          </div>
+
           <div className="flex-1 p-4 flex flex-col gap-4 max-w-lg mx-auto w-full">
             <div className="bg-white rounded-3xl shadow-md p-5">
-              <div className="text-xs font-black text-amber-400 uppercase tracking-widest mb-3">
-                Oppgave {state.currentTaskIndex + 1}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-black text-amber-400 uppercase tracking-widest">
+                  Oppgave {currentTaskIndex + 1}
+                </div>
+                {next !== null && (
+                  <button
+                    onClick={handleSkip}
+                    className="text-xs text-gray-400 hover:text-amber-500 font-semibold"
+                  >
+                    Hopp over →
+                  </button>
+                )}
               </div>
               {currentTask.type === 'text' ? (
                 <TextTask task={currentTask} onCorrect={handleCorrect} />
@@ -141,6 +189,12 @@ export default function PlayerPage() {
               )}
             </div>
 
+            {skippedCount > 0 && completed.length > 0 && (
+              <p className="text-center text-xs text-amber-600 font-semibold">
+                {skippedCount} ubesvart{skippedCount !== 1 ? 'e' : ''} oppgave{skippedCount !== 1 ? 'r' : ''} gjenstår
+              </p>
+            )}
+
             {config.puzzlePieces && config.puzzlePieces.length > 0 && (
               <div className="bg-white rounded-3xl shadow-md p-4 flex justify-center">
                 <PuzzleBoard pieces={displayPieces} total={tasks.length} compact />
@@ -150,9 +204,11 @@ export default function PlayerPage() {
         </>
       )}
 
-      {/* Rendered outside the currentTask guard so it shows even after the last task */}
       {revealPiece && (
-        <PieceReveal piece={revealPiece} onClose={handleRevealClose} />
+        <PieceReveal
+          piece={revealPiece}
+          onClose={handleRevealClose}
+        />
       )}
     </div>
   );

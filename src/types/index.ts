@@ -27,6 +27,7 @@ export interface AdminConfig {
 
 export interface GameState {
   currentTaskIndex: number;
+  completedTaskIndices: number[];
   completed: boolean;
   startedAt: string;
   started: boolean;

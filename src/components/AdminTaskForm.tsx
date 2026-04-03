@@ -237,7 +237,7 @@ export function ImageUpload({ label, value, onClear, onCapture }: ImageUploadPro
 
       {value ? (
         <div className="relative group">
-          <img src={value} alt={label} className="rounded-xl w-full object-cover max-h-40" />
+          <img src={value} alt={label} className="rounded-xl w-full object-contain max-h-40" />
           <button
             type="button"
             onClick={onClear}

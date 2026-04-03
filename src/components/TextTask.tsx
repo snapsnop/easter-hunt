@@ -40,7 +40,7 @@ export default function TextTask({ task, onCorrect }: Props) {
         <img
           src={task.questionImage}
           alt="Oppgavebilde"
-          className="rounded-2xl w-full object-cover max-h-64"
+          className="rounded-2xl w-full object-contain max-h-64"
         />
       )}
       <p className="text-lg font-semibold text-gray-800">{task.question}</p>

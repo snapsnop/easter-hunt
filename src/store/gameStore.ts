@@ -6,26 +6,37 @@ interface GameStore {
   state: GameState;
   init: (totalTasks: number) => void;
   start: () => void;
-  advanceTask: () => void;
+  completeTask: (index: number) => void;
+  goToTask: (index: number) => void;
   reset: () => void;
 }
 
 function freshState(): GameState {
   return {
     currentTaskIndex: 0,
+    completedTaskIndices: [],
     completed: false,
     startedAt: new Date().toISOString(),
     started: false,
   };
 }
 
+function migrateState(s: GameState): GameState {
+  // Backwards compat: old saves only had currentTaskIndex, no completedTaskIndices
+  if (!Array.isArray(s.completedTaskIndices)) {
+    const completed = Array.from({ length: s.currentTaskIndex }, (_, i) => i);
+    return { ...s, completedTaskIndices: completed };
+  }
+  return s;
+}
+
 export const useGameStore = create<GameStore>((set) => ({
-  state: loadGameState() ?? freshState(),
+  state: migrateState(loadGameState() ?? freshState()),
 
   init(totalTasks) {
     const existing = loadGameState();
     if (existing && existing.currentTaskIndex <= totalTasks) {
-      set({ state: existing });
+      set({ state: migrateState(existing) });
     } else {
       const s = freshState();
       saveGameState(s);
@@ -41,12 +52,20 @@ export const useGameStore = create<GameStore>((set) => ({
     });
   },
 
-  advanceTask() {
+  completeTask(index) {
     set(prev => {
-      const next: GameState = {
-        ...prev.state,
-        currentTaskIndex: prev.state.currentTaskIndex + 1,
-      };
+      const completed = prev.state.completedTaskIndices.includes(index)
+        ? prev.state.completedTaskIndices
+        : [...prev.state.completedTaskIndices, index];
+      const next: GameState = { ...prev.state, completedTaskIndices: completed };
+      saveGameState(next);
+      return { state: next };
+    });
+  },
+
+  goToTask(index) {
+    set(prev => {
+      const next: GameState = { ...prev.state, currentTaskIndex: index };
       saveGameState(next);
       return { state: next };
     });
