@@ -47,7 +47,7 @@ export async function compareImages(
   const genAI = new GoogleGenerativeAI(resolvedKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
-  const prompt = `Det første bildet er et referansebilde av en lokasjon fra en påskerebus. Det andre bildet er tatt av en spiller som forsøker å finne samme sted. Vurder om bildene viser samme sted – vær raus og godkjenn selv om vinkel, lysforhold eller utsnitt er litt forskjellig, så lenge stedet er gjenkjennelig. Godkjenn hvis du er minst ${confidencePct}% sikker. Svar kun med gyldig JSON: {"match": true, "reason": "kort begrunnelse på norsk"}`;
+  const prompt = `Det første bildet er et referansebilde av en lokasjon eller et objekt fra en påskerebus. Det andre bildet er tatt av en spiller som forsøker å finne samme lokasjon eller objekt. Vurder om bildene viser samme sted eller objekt – vær raus og godkjenn selv om vinkel, lysforhold eller utsnitt er litt forskjellig, så lenge stedet eller objektet på bildet er gjenkjennelig. Godkjenn hvis du er minst ${confidencePct}% sikker. Svar kun med gyldig JSON: {"match": true, "reason": "kort og vittig begrunnelse på norsk"}`;
 
   const result = await withExponentialBackoff(() =>
     model.generateContent([

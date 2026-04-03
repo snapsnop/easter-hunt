@@ -30,6 +30,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Write tasks.json
+        run: echo '${{ secrets.TASKS_JSON }}' > public/tasks.json
+
       - run: npm run build
         env:
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
