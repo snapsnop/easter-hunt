@@ -147,6 +147,7 @@ function AdminPanel() {
   const [newPw, setNewPw] = useState('');
   const [saved, setSaved] = useState<string | null>(null);
   const [splitting, setSplitting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [welcomeTitle, setWelcomeTitle] = useState(config?.welcomeTitle ?? '');
   const [welcomeText, setWelcomeText] = useState(config?.welcomeText ?? '');
   const [welcomeImage, setWelcomeImage] = useState<string | undefined>(config?.welcomeImage);
@@ -404,17 +405,29 @@ function AdminPanel() {
               <p className="text-xs text-gray-400">
                 Sletter spillerens fremgang. Oppgavene beholdes.
               </p>
-              <button
-                onClick={() => {
-                  if (confirm('Nullstill spillet? All fremgang slettes.')) {
-                    reset();
-                    flash('Spillet er nullstilt');
-                  }
-                }}
-                className="py-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold rounded-xl text-sm transition-colors"
-              >
-                🔄 Nullstill spill
-              </button>
+              {confirmReset ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { reset(); setConfirmReset(false); flash('Spillet er nullstilt'); }}
+                    className="flex-1 py-2 bg-red-500 text-white font-bold rounded-xl text-sm"
+                  >
+                    Ja, nullstill
+                  </button>
+                  <button
+                    onClick={() => setConfirmReset(false)}
+                    className="flex-1 py-2 bg-gray-100 text-gray-600 font-bold rounded-xl text-sm"
+                  >
+                    Avbryt
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmReset(true)}
+                  className="py-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold rounded-xl text-sm transition-colors"
+                >
+                  🔄 Nullstill spill
+                </button>
+              )}
             </div>
           </div>
         )}

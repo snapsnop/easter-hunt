@@ -11,6 +11,7 @@ export default function AdminTaskList({ tasks }: Props) {
   const { addTask, updateTask, deleteTask, reorderTasks } = useAdminStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const sorted = [...tasks].sort((a, b) => a.order - b.order);
 
@@ -95,12 +96,29 @@ export default function AdminTaskList({ tasks }: Props) {
               >
                 Rediger
               </button>
-              <button
-                onClick={() => { if (confirm(`Slett oppgave ${i + 1}?`)) deleteTask(task.id); }}
-                className="px-3 py-1 text-xs bg-red-100 text-red-600 font-bold rounded-lg hover:bg-red-200 transition-colors"
-              >
-                Slett
-              </button>
+              {confirmDeleteId === task.id ? (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { deleteTask(task.id); setConfirmDeleteId(null); }}
+                    className="px-2 py-1 text-xs bg-red-500 text-white font-bold rounded-lg"
+                  >
+                    Ja
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="px-2 py-1 text-xs bg-gray-100 text-gray-600 font-bold rounded-lg"
+                  >
+                    Nei
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteId(task.id)}
+                  className="px-3 py-1 text-xs bg-red-100 text-red-600 font-bold rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  Slett
+                </button>
+              )}
             </div>
           </div>
         )
