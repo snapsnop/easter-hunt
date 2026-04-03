@@ -180,9 +180,15 @@ function AdminPanel() {
 
   async function handleSolutionCapture(base64: string) {
     setSplitting(true);
-    await setSolutionImage(base64);
-    setSplitting(false);
-    flash('Løsningsbilde lastet opp og delt');
+    try {
+      await setSolutionImage(base64);
+      flash('Løsningsbilde lastet opp og delt');
+    } catch (err) {
+      flash('Feil ved oppdeling av bilde – prøv igjen');
+      console.error(err);
+    } finally {
+      setSplitting(false);
+    }
   }
 
   async function handleSavePassword() {
