@@ -79,13 +79,16 @@ export default function CameraCapture({ onCapture, onClose }: Props) {
         </div>
       ) : preview ? (
         /* Preview captured photo */
-        <div className="flex-1 flex flex-col gap-4 p-4">
-          <img
-            src={preview}
-            alt="Bilde"
-            className="flex-1 object-contain w-full rounded-2xl min-h-0"
-          />
-          <div className="flex gap-3">
+        <div className="flex-1 flex flex-col p-4 min-h-0" style={{ gap: '16px' }}>
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <img
+              src={preview}
+              alt="Bilde"
+              className="object-contain max-w-full max-h-full rounded-2xl"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+          <div className="flex gap-3 flex-shrink-0">
             <button
               onClick={retake}
               className="flex-1 py-3 border-2 border-white text-white font-bold rounded-2xl"
