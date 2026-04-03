@@ -1,0 +1,52 @@
+import type { AdminConfig, GameState } from '../types';
+
+const CONFIG_KEY = 'easter-hunt-config';
+const GAME_KEY = 'easter-hunt-game';
+
+export async function loadConfig(): Promise<AdminConfig | null> {
+  const stored = localStorage.getItem(CONFIG_KEY);
+  if (stored) {
+    try { return JSON.parse(stored); } catch { /* fall through */ }
+  }
+  try {
+    const res = await fetch(import.meta.env.BASE_URL + 'tasks.json');
+    if (res.ok) {
+      const config: AdminConfig = await res.json();
+      saveConfig(config);
+      return config;
+    }
+  } catch { /* no default config */ }
+  return null;
+}
+
+export function saveConfig(config: AdminConfig): void {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+}
+
+export function loadGameState(): GameState | null {
+  const stored = localStorage.getItem(GAME_KEY);
+  if (!stored) return null;
+  try { return JSON.parse(stored); } catch { return null; }
+}
+
+export function saveGameState(state: GameState): void {
+  localStorage.setItem(GAME_KEY, JSON.stringify(state));
+}
+
+export function clearGameState(): void {
+  localStorage.removeItem(GAME_KEY);
+}
+
+export function exportConfig(config: AdminConfig, includeApiKey = true): void {
+  const data = includeApiKey ? config : { ...config, geminiApiKey: undefined };
+  const filename = includeApiKey ? 'easter-hunt-config.json' : 'tasks.json';
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
