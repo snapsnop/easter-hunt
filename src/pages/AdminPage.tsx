@@ -283,6 +283,7 @@ function AdminPanel() {
                   type="text"
                   value={welcomeTitle}
                   onChange={e => setWelcomeTitle(e.target.value)}
+                  onBlur={() => setWelcome(welcomeTitle, welcomeText, welcomeImage)}
                   placeholder="Påskerebus 2026"
                   className="w-full border-2 border-amber-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-400"
                 />
@@ -292,6 +293,7 @@ function AdminPanel() {
                 <textarea
                   value={welcomeText}
                   onChange={e => setWelcomeText(e.target.value)}
+                  onBlur={() => setWelcome(welcomeTitle, welcomeText, welcomeImage)}
                   rows={4}
                   placeholder="Velkommen til årets påskerebus! Finn alle påskeeggene..."
                   className="w-full border-2 border-amber-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-400 resize-none"
@@ -300,8 +302,8 @@ function AdminPanel() {
               <ImageUpload
                 label="Bilde (valgfritt)"
                 value={welcomeImage}
-                onClear={() => setWelcomeImage(undefined)}
-                onCapture={setWelcomeImage}
+                onClear={() => { setWelcomeImage(undefined); setWelcome(welcomeTitle, welcomeText, undefined); }}
+                onCapture={img => { setWelcomeImage(img); setWelcome(welcomeTitle, welcomeText, img); }}
               />
               <button
                 onClick={() => { setWelcome(welcomeTitle, welcomeText, welcomeImage); flash('Velkomstside lagret'); }}
