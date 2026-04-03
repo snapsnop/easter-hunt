@@ -116,19 +116,19 @@ export default function LocationTask({ task, apiKey, onCorrect }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {task.questionImage && (
-        <img src={task.questionImage} alt="Oppgavebilde" className="rounded-2xl w-full h-auto max-h-96" />
+        <img src={task.questionImage} alt="Oppgavebilde" className="rounded-2xl max-w-full max-h-96 w-auto h-auto mx-auto block" />
       )}
       {task.referenceImage && (
         <div>
           <p className="text-xs font-bold text-gray-500 mb-1">📍 Finn dette stedet:</p>
-          <img src={task.referenceImage} alt="Lokasjon" className="rounded-2xl w-full h-auto max-h-96" />
+          <img src={task.referenceImage} alt="Lokasjon" className="rounded-2xl max-w-full max-h-96 w-auto h-auto mx-auto block" />
         </div>
       )}
       <p className="text-lg font-semibold text-gray-800">{task.question}</p>
 
       {preview ? (
         <div className="flex flex-col gap-3">
-          <img src={preview} alt="Ditt bilde" className="rounded-2xl w-full h-auto max-h-96" />
+          <img src={preview} alt="Ditt bilde" className="rounded-2xl max-w-full max-h-96 w-auto h-auto mx-auto block" />
           {status === 'wrong' && (
             <p className="text-red-500 text-sm font-semibold text-center">
               Ikke riktig sted. {reason}
