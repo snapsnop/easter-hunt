@@ -51,7 +51,7 @@ export default function LocationTask({ task, apiKey, onCorrect }: Props) {
   async function handleSubmit() {
     if (!preview || !task.referenceImage) return;
 
-    if (!apiKey) {
+    if (!apiKey && !import.meta.env.VITE_GEMINI_API_KEY) {
       setConfirmMode(true);
       return;
     }

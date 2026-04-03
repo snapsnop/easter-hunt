@@ -57,13 +57,19 @@ function SetupView({ onSetup }: SetupViewProps) {
             placeholder="Bekreft passord"
             className="border-2 border-amber-200 rounded-2xl px-4 py-3 outline-none focus:border-amber-400"
           />
-          <input
-            type="password"
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
-            placeholder="Claude API-nøkkel (valgfritt)"
-            className="border-2 border-amber-200 rounded-2xl px-4 py-3 outline-none focus:border-amber-400 font-mono text-sm"
-          />
+          {import.meta.env.VITE_GEMINI_API_KEY ? (
+            <p className="text-xs text-green-600 font-semibold text-center">
+              ✓ Gemini API-nøkkel er satt via miljøvariabel.
+            </p>
+          ) : (
+            <input
+              type="password"
+              value={apiKey}
+              onChange={e => setApiKey(e.target.value)}
+              placeholder="Gemini API-nøkkel (valgfritt)"
+              className="border-2 border-amber-200 rounded-2xl px-4 py-3 outline-none focus:border-amber-400 font-mono text-sm"
+            />
+          )}
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button
             type="submit"
@@ -318,23 +324,31 @@ function AdminPanel() {
             {/* API key */}
             <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-2">
               <h3 className="font-black text-gray-700">Gemini API-nøkkel</h3>
-              <p className="text-xs text-gray-400">
-                Brukes til automatisk bildsammenligning i lokasjonsoppgaver.
-                Uten nøkkel må spilleren bekrefte selv.
-              </p>
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={e => setApiKeyInput(e.target.value)}
-                placeholder="AIza..."
-                className="border-2 border-amber-200 rounded-xl px-3 py-2 font-mono text-sm outline-none focus:border-amber-400"
-              />
-              <button
-                onClick={() => { setApiKey(apiKeyInput); flash('API-nøkkel lagret'); }}
-                className="py-2 bg-amber-400 hover:bg-amber-500 text-white font-bold rounded-xl text-sm transition-colors"
-              >
-                Lagre nøkkel
-              </button>
+              {import.meta.env.VITE_GEMINI_API_KEY ? (
+                <p className="text-xs text-green-600 font-semibold">
+                  ✓ API-nøkkel er satt via miljøvariabel (GitHub secret).
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-400">
+                    Brukes til automatisk bildsammenligning i lokasjonsoppgaver.
+                    Uten nøkkel må spilleren bekrefte selv.
+                  </p>
+                  <input
+                    type="password"
+                    value={apiKeyInput}
+                    onChange={e => setApiKeyInput(e.target.value)}
+                    placeholder="AIza..."
+                    className="border-2 border-amber-200 rounded-xl px-3 py-2 font-mono text-sm outline-none focus:border-amber-400"
+                  />
+                  <button
+                    onClick={() => { setApiKey(apiKeyInput); flash('API-nøkkel lagret'); }}
+                    className="py-2 bg-amber-400 hover:bg-amber-500 text-white font-bold rounded-xl text-sm transition-colors"
+                  >
+                    Lagre nøkkel
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Change password */}
