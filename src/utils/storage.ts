@@ -68,3 +68,20 @@ export function exportConfig(config: AdminConfig, includeApiKey = true): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export async function shareConfig(config: AdminConfig): Promise<'shared' | 'downloaded' | 'error'> {
+  const data = { ...config, geminiApiKey: undefined };
+  const json = JSON.stringify(data, null, 2);
+  const file = new File([json], 'easter-hunt-config.json', { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'Påskerebus-konfig' });
+      return 'shared';
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return 'error';
+    }
+  }
+  // Fallback to download
+  exportConfig(config, false);
+  return 'downloaded';
+}

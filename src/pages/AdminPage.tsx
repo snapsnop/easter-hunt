@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAdminStore } from '../store/adminStore';
 import { useGameStore } from '../store/gameStore';
-import { exportConfig, saveConfig } from '../utils/storage';
+import { exportConfig, saveConfig, shareConfig } from '../utils/storage';
 import AdminTaskList from '../components/AdminTaskList';
 import PuzzleBoard from '../components/PuzzleBoard';
 import { ImageUpload } from '../components/AdminTaskForm';
@@ -168,10 +168,20 @@ function AdminPanel() {
     reader.onload = () => {
       try {
         const imported = JSON.parse(reader.result as string);
-        saveConfig(imported);
+        if (typeof imported !== 'object' || imported === null || !Array.isArray(imported.tasks)) {
+          flash('Ugyldig konfigurasjonsfil');
+          return;
+        }
+        try {
+          saveConfig(imported);
+        } catch (storageErr) {
+          flash('Filen er for stor til å lagres (localStorage full)');
+          console.error(storageErr);
+          return;
+        }
         window.location.reload();
       } catch {
-        alert('Ugyldig konfigurasjonsfil');
+        flash('Kunne ikke lese filen – er det en gyldig JSON-fil?');
       }
     };
     reader.readAsText(file);
@@ -387,6 +397,19 @@ function AdminPanel() {
               </p>
               <div className="flex gap-2">
                 <button
+                  onClick={() => shareConfig(config).then(r => r === 'downloaded' && flash('Lastet ned (deling ikke støttet)'))}
+                  className="flex-1 py-2 bg-amber-400 hover:bg-amber-500 text-white font-bold rounded-xl text-sm transition-colors"
+                  title="Del konfig via AirDrop, Messenger o.l."
+                >
+                  ↑ Del
+                </button>
+                <label className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold rounded-xl text-sm text-center cursor-pointer transition-colors">
+                  ⬆ Importer
+                  <input type="file" accept=".json" className="hidden" onChange={handleImport} />
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <button
                   onClick={() => exportConfig(config, true)}
                   className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold rounded-xl text-sm transition-colors"
                   title="Eksporter med API-nøkkel (backup)"
@@ -396,14 +419,10 @@ function AdminPanel() {
                 <button
                   onClick={() => exportConfig(config, false)}
                   className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold rounded-xl text-sm transition-colors"
-                  title="Eksporter uten API-nøkkel – lagres som tasks.json"
+                  title="Eksporter uten API-nøkkel – til tasks.json"
                 >
                   ⬇ tasks.json
                 </button>
-                <label className="flex-1 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold rounded-xl text-sm text-center cursor-pointer transition-colors">
-                  ⬆ Importer
-                  <input type="file" accept=".json" className="hidden" onChange={handleImport} />
-                </label>
               </div>
             </div>
 
