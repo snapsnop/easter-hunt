@@ -140,7 +140,7 @@ function LoginView({ onLogin }: LoginViewProps) {
 type Tab = 'tasks' | 'puzzle' | 'welcome' | 'settings';
 
 function AdminPanel() {
-  const { config, logout, setApiKey, changePassword, setSolutionImage, setWelcome } = useAdminStore();
+  const { config, logout, setApiKey, changePassword, setSolutionImage, setWelcome, resetTasksAndPuzzle } = useAdminStore();
   const { reset } = useGameStore();
   const [tab, setTab] = useState<Tab>('tasks');
   const [apiKeyInput, setApiKeyInput] = useState(config?.geminiApiKey ?? '');
@@ -148,6 +148,7 @@ function AdminPanel() {
   const [saved, setSaved] = useState<string | null>(null);
   const [splitting, setSplitting] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmResetTasks, setConfirmResetTasks] = useState(false);
   const [welcomeTitle, setWelcomeTitle] = useState(config?.welcomeTitle ?? '');
   const [welcomeText, setWelcomeText] = useState(config?.welcomeText ?? '');
   const [welcomeImage, setWelcomeImage] = useState<string | undefined>(config?.welcomeImage);
@@ -424,6 +425,37 @@ function AdminPanel() {
                   ⬇ tasks.json
                 </button>
               </div>
+            </div>
+
+            {/* Reset tasks and puzzle */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 flex flex-col gap-2">
+              <h3 className="font-black text-gray-700">Nullstill oppgaver og puslespill</h3>
+              <p className="text-xs text-gray-400">
+                Sletter alle oppgaver og puslespillbilde. Velkomst, passord og API-nøkkel beholdes.
+              </p>
+              {confirmResetTasks ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { resetTasksAndPuzzle(); setConfirmResetTasks(false); flash('Oppgaver og puslespill nullstilt'); }}
+                    className="flex-1 py-2 bg-red-500 text-white font-bold rounded-xl text-sm"
+                  >
+                    Ja, nullstill
+                  </button>
+                  <button
+                    onClick={() => setConfirmResetTasks(false)}
+                    className="flex-1 py-2 bg-gray-100 text-gray-600 font-bold rounded-xl text-sm"
+                  >
+                    Avbryt
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmResetTasks(true)}
+                  className="py-2 bg-red-100 hover:bg-red-200 text-red-600 font-bold rounded-xl text-sm transition-colors"
+                >
+                  🗑 Nullstill oppgaver og puslespill
+                </button>
+              )}
             </div>
 
             {/* Reset game */}

@@ -85,6 +85,7 @@ interface AdminStore {
   changePassword: (newPassword: string) => Promise<void>;
   setSolutionImage: (base64: string) => Promise<void>;
   setWelcome: (title: string, text: string, image?: string) => void;
+  resetTasksAndPuzzle: () => void;
 }
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
@@ -174,6 +175,20 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     if (!config) return;
     const draft = { ...config, solutionImage: base64 };
     const updated = await withRecomputedPieces(draft);
+    set({ config: updated });
+    saveConfig(updated);
+  },
+
+  resetTasksAndPuzzle() {
+    const { config } = get();
+    if (!config) return;
+    const updated = {
+      ...config,
+      tasks: [],
+      solutionImage: undefined,
+      puzzlePieces: [],
+      pieceRevealOrder: [],
+    };
     set({ config: updated });
     saveConfig(updated);
   },
