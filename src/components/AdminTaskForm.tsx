@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import type { Task, TaskType } from '../types';
+import { useAdminStore } from '../store/adminStore';
+import { generateTask, type Theme, type Difficulty } from '../utils/generateTask';
 import CameraCapture from './CameraCapture';
 
 type NewTask = Omit<Task, 'id' | 'order'>;
@@ -10,7 +12,23 @@ interface Props {
   onCancel: () => void;
 }
 
+const THEMES: { value: Theme; label: string }[] = [
+  { value: 'gåte', label: '🧩 Gåte' },
+  { value: 'natur', label: '🌿 Natur' },
+  { value: 'historie', label: '📜 Historie' },
+  { value: 'samfunn', label: '🌍 Samfunn' },
+  { value: 'musikk', label: '🎵 Musikk' },
+  { value: 'blandet', label: '🎲 Blandet' },
+];
+
+const DIFFICULTIES: { value: Difficulty; label: string }[] = [
+  { value: 'barn', label: '🐣 Barn' },
+  { value: 'ungdom', label: '🎒 Ungdom' },
+  { value: 'voksen', label: '🎩 Voksen' },
+];
+
 export default function AdminTaskForm({ task, onSave, onCancel }: Props) {
+  const { config } = useAdminStore();
   const [type, setType] = useState<TaskType>(task?.type ?? 'text');
   const [question, setQuestion] = useState(task?.question ?? '');
   const [answer, setAnswer] = useState(task?.answer ?? '');
@@ -19,6 +37,42 @@ export default function AdminTaskForm({ task, onSave, onCancel }: Props) {
   const [referenceImage, setReferenceImage] = useState<string | undefined>(task?.referenceImage);
   const [threshold, setThreshold] = useState(task?.similarityThreshold ?? 0.7);
   const [hint, setHint] = useState(task?.hint ?? '');
+
+  // Generate panel
+  const hasApiKey = !!(config?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY);
+  const [showGenerate, setShowGenerate] = useState(false);
+  const [genTheme, setGenTheme] = useState<Theme>('blandet');
+  const [genEaster, setGenEaster] = useState(true);
+  const [genDifficulty, setGenDifficulty] = useState<Difficulty>('barn');
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+
+  async function handleGenerate() {
+    setGenerating(true);
+    setGenError(null);
+    try {
+      const generated = await generateTask({
+        type: type as 'text' | 'multiple-choice',
+        theme: genTheme,
+        easterRelated: genEaster,
+        difficulty: genDifficulty,
+        welcomeContext: config?.welcomeText,
+        apiKey: config?.geminiApiKey,
+      });
+      setQuestion(generated.question);
+      setAnswer(generated.answer);
+      if (generated.choices) {
+        const padded = [...generated.choices];
+        while (padded.length < 4) padded.push('');
+        setChoices(padded);
+      }
+      setShowGenerate(false);
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : 'Ukjent feil');
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   function handleSave() {
     if (!question.trim()) return;
@@ -61,6 +115,90 @@ export default function AdminTaskForm({ task, onSave, onCancel }: Props) {
           </button>
         ))}
       </div>
+
+      {/* Generate with Gemini (text + multiple-choice only) */}
+      {type !== 'location' && hasApiKey && (
+        <div className="border-2 border-amber-100 rounded-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => { setShowGenerate(v => !v); setGenError(null); }}
+            className="w-full px-4 py-2.5 flex items-center justify-between text-sm font-semibold text-amber-600 hover:bg-amber-50 transition-colors"
+          >
+            <span>✨ Generer med Gemini</span>
+            <span className="text-xs text-amber-400">{showGenerate ? '▲' : '▼'}</span>
+          </button>
+
+          {showGenerate && (
+            <div className="px-4 pb-4 flex flex-col gap-3 border-t-2 border-amber-100 pt-3">
+              {/* Theme */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1.5">Tema</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {THEMES.map(t => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setGenTheme(t.value)}
+                      className={`py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                        genTheme === t.value
+                          ? 'bg-amber-400 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Difficulty */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1.5">Vanskelighetsgrad</p>
+                <div className="flex gap-1.5">
+                  {DIFFICULTIES.map(d => (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => setGenDifficulty(d.value)}
+                      className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                        genDifficulty === d.value
+                          ? 'bg-amber-400 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Easter related */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={genEaster}
+                  onChange={e => setGenEaster(e.target.checked)}
+                  className="w-4 h-4 accent-amber-400"
+                />
+                <span className="text-sm text-gray-600 font-semibold">🐣 Påskerelatert</span>
+              </label>
+
+              {genError && (
+                <p className="text-red-500 text-xs">{genError}</p>
+              )}
+
+              <button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating}
+                className="py-2.5 bg-amber-400 hover:bg-amber-500 disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-xl text-sm transition-colors"
+              >
+                {generating ? '⏳ Genererer...' : '✨ Generer oppgave'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Question */}
       <div>

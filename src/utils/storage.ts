@@ -70,8 +70,7 @@ export function exportConfig(config: AdminConfig, includeApiKey = true): void {
 }
 
 export async function shareConfig(config: AdminConfig): Promise<'shared' | 'downloaded' | 'error'> {
-  const data = { ...config, geminiApiKey: undefined };
-  const json = JSON.stringify(data, null, 2);
+  const json = JSON.stringify(config, null, 2);
   const file = new File([json], 'easter-hunt-config.json', { type: 'application/json' });
   if (navigator.canShare?.({ files: [file] })) {
     try {
@@ -82,6 +81,6 @@ export async function shareConfig(config: AdminConfig): Promise<'shared' | 'down
     }
   }
   // Fallback to download
-  exportConfig(config, false);
+  exportConfig(config, true);
   return 'downloaded';
 }
